@@ -1,7 +1,7 @@
 {
-  "name": "Personnummer Validator",
-  "short_name": "PNR Validator",
-  "description": "Beräkna och verifiera svenska personnummer med Luhn-algoritmen",
+  "name": "Vardagslådan - Digital verktygslåda för Sverige",
+  "short_name": "Vardagslådan",
+  "description": "Snabba, enkla miniverktyg för vardagen i Sverige: personnummer, IP-adress, lönekalkyl, OCR-nummer och mer",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

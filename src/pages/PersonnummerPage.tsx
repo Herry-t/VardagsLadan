@@ -64,30 +64,23 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
+    <div className="container mx-auto px-4 py-8 space-y-8">
       {/* Header */}
-      <header className="bg-background/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">
-                {t('app.title')}
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                {t('app.subtitle')}
-              </p>
-            </div>
-            
-            <Badge variant="secondary" className="flex items-center gap-1 text-xs">
-              <Shield className="h-3 w-3" />
-              {t('app.privacyBadge')}
-            </Badge>
-          </div>
+      <section className="text-center space-y-4 max-w-2xl mx-auto">
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <IdCard className="h-8 w-8 text-primary" />
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+            {t('app.title')}
+          </h1>
         </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 space-y-8">
+        <p className="text-muted-foreground">
+          {t('app.subtitle')}
+        </p>
+        <Badge variant="secondary" className="text-xs">
+          <Shield className="h-4 w-4 mr-1" />
+          {t('app.privacyBadge')}
+        </Badge>
+      </section>
         {/* Input Section */}
         <section className="max-w-md mx-auto">
           <PnrInput
