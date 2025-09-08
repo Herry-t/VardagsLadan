@@ -20,8 +20,11 @@ export function PnrInput({ value, onChange, error, className }: PnrInputProps) {
     // Allow only digits, dash, and plus
     input = input.replace(/[^\d\-+]/g, '');
     
-    // Auto-format: add dash after 6 digits if not present
-    if (input.length === 6 && !input.includes('-') && !input.includes('+')) {
+    // Auto-format: add dash after 6 digits if not present, but only when adding characters
+    // Check if the user is adding characters by comparing lengths
+    const isAddingCharacters = input.length > value.length;
+    
+    if (input.length === 6 && !input.includes('-') && !input.includes('+') && isAddingCharacters) {
       input = input.substring(0, 6) + '-';
     }
     
@@ -29,7 +32,7 @@ export function PnrInput({ value, onChange, error, className }: PnrInputProps) {
     if (input.length <= 13) {
       onChange(input);
     }
-  }, [onChange]);
+  }, [onChange, value]);
 
   const handleFocus = useCallback(() => setIsFocused(true), []);
   const handleBlur = useCallback(() => setIsFocused(false), []);
