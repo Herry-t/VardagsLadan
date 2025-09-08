@@ -1,0 +1,57 @@
+{
+  "app": {
+    "title": "Personnummer Validator",
+    "subtitle": "Beräkna och verifiera svenska personnummer",
+    "privacyBadge": "Beräkningen sker lokalt i din webbläsare"
+  },
+  "input": {
+    "label": "Personnummer",
+    "placeholder": "YYMMDD-NNN eller YYMMDDNNNC",
+    "help": "Ange personnummer med eller utan bindestreck. Stöder även samordningsnummer."
+  },
+  "result": {
+    "checkDigit": "Kontrollsiffra",
+    "suggested": "Föreslagen kontrollsiffra",
+    "complete": "Komplett personnummer",
+    "valid": "Giltigt personnummer",
+    "invalid": "Ogiltigt personnummer",
+    "copy": "Kopiera",
+    "copied": "Kopierat!",
+    "gender": {
+      "label": "Kön",
+      "male": "Man",
+      "female": "Kvinna"
+    },
+    "coordination": "Samordningsnummer",
+    "century": "Sekel"
+  },
+  "howItWorks": {
+    "title": "Så fungerar det",
+    "steps": [
+      "Ange personnummer (9 eller 10 siffror)",
+      "Algoritmen använder Luhn/Mod10-metoden",
+      "Varannan siffra multipliceras med 2",
+      "Siffersummorna adderas",
+      "Kontrollsiffran beräknas från summan"
+    ],
+    "example": {
+      "title": "Exempel",
+      "input": "850709-980",
+      "result": "Kontrollsiffra: 5",
+      "complete": "850709-9805"
+    }
+  },
+  "errors": {
+    "tooShort": "För kort personnummer (minst 9 siffror krävs)",
+    "invalidFormat": "Ogiltigt format för personnummer",
+    "invalidMonth": "Ogiltig månad",
+    "invalidDay": "Ogiltig dag",
+    "invalidDate": "Ogiltigt datum",
+    "wrongCheckDigit": "Felaktig kontrollsiffra"
+  },
+  "testGenerator": {
+    "button": "Generera testnummer",
+    "warning": "⚠️ Detta är ett syntetiskt testnummer, inte en verklig person",
+    "disclaimer": "Endast för testning"
+  }
+}

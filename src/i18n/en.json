@@ -1,0 +1,57 @@
+{
+  "app": {
+    "title": "Personal Number Validator",
+    "subtitle": "Calculate and verify Swedish personal numbers",
+    "privacyBadge": "Calculation happens locally in your browser"
+  },
+  "input": {
+    "label": "Personal Number",
+    "placeholder": "YYMMDD-NNN or YYMMDDNNNC",
+    "help": "Enter personal number with or without dash. Also supports coordination numbers."
+  },
+  "result": {
+    "checkDigit": "Check Digit",
+    "suggested": "Suggested Check Digit",
+    "complete": "Complete Personal Number",
+    "valid": "Valid Personal Number",
+    "invalid": "Invalid Personal Number",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "gender": {
+      "label": "Gender",
+      "male": "Male",
+      "female": "Female"
+    },
+    "coordination": "Coordination Number",
+    "century": "Century"
+  },
+  "howItWorks": {
+    "title": "How It Works",
+    "steps": [
+      "Enter personal number (9 or 10 digits)",
+      "Algorithm uses Luhn/Mod10 method",
+      "Every other digit is multiplied by 2",
+      "Digit sums are added together",
+      "Check digit is calculated from the sum"
+    ],
+    "example": {
+      "title": "Example",
+      "input": "850709-980",
+      "result": "Check digit: 5",
+      "complete": "850709-9805"
+    }
+  },
+  "errors": {
+    "tooShort": "Personal number too short (at least 9 digits required)",
+    "invalidFormat": "Invalid personal number format",
+    "invalidMonth": "Invalid month",
+    "invalidDay": "Invalid day",
+    "invalidDate": "Invalid date",
+    "wrongCheckDigit": "Wrong check digit"
+  },
+  "testGenerator": {
+    "button": "Generate Test Number",
+    "warning": "⚠️ This is a synthetic test number, not a real person",
+    "disclaimer": "For testing only"
+  }
+}

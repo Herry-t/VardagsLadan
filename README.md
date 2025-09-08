@@ -1,73 +1,238 @@
-# Welcome to your Lovable project
+# Personnummer Validator
 
-## Project info
+En modern, snabb och mobilanpassad PWA för att beräkna och verifiera svenska personnummer med Luhn-algoritmen.
 
-**URL**: https://lovable.dev/projects/a1b4fd19-8a1b-44ef-8afa-8e6f2ec5a09d
+![Personnummer Validator](public/icon-192x192.png)
 
-## How can I edit this code?
+## 🚀 Funktioner
 
-There are several ways of editing your application.
+- **Luhn-algoritm**: Korrekt beräkning av kontrollsiffror enligt svensk standard
+- **Samordningsnummer**: Fullt stöd för samordningsnummer (dag +60)
+- **Realtidsvalidering**: Live-feedback medan du skriver
+- **Mobilvänlig**: Responsiv design med touch-optimering
+- **PWA**: Installera som app på mobilen
+- **Integritetsfokus**: All beräkning sker lokalt i webbläsaren
+- **Tillgänglighet**: WCAG AA-kompatibel med skärmläsarstöd
+- **Internationalisering**: Stöd för svenska och engelska
 
-**Use Lovable**
+## 🛠️ Teknisk stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/a1b4fd19-8a1b-44ef-8afa-8e6f2ec5a09d) and start prompting.
+- **Frontend**: React 18 + TypeScript + Vite
+- **Styling**: Tailwind CSS + shadcn/ui
+- **Tillgänglighet**: ARIA-labels och live regions
+- **PWA**: Service Worker + Web App Manifest
+- **Testing**: Vitest för enhetstester
+- **Linting**: ESLint + Prettier
 
-Changes made via Lovable will be committed automatically to this repo.
+## 📱 Installation och användning
 
-**Use your preferred IDE**
+### Utveckling
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+```bash
+# Klona projektet
+git clone <repository-url>
+cd personnummer-validator
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+# Installera beroenden
+npm install
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Starta utvecklingsserver
 npm run dev
+
+# Kör tester
+npm test
+
+# Bygg för produktion
+npm run build
 ```
 
-**Edit a file directly in GitHub**
+### PWA Installation
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Besök appen i en modern webbläsare och klicka på "Installera app"-knappen eller använd webbläsarens installationsalternativ.
 
-**Use GitHub Codespaces**
+## 🔒 Integritet och säkerhet
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- **Lokala beräkningar**: Ingen data skickas till servrar
+- **Ingen datalagring**: Inga personnummer sparas i localStorage
+- **Content Security Policy**: Strikt CSP för säkerhet
+- **HTTPS Only**: Kräver säker anslutning i produktion
 
-## What technologies are used for this project?
+## 🧮 Algoritm
 
-This project is built with:
+Appen använder Luhn/Mod10-algoritmen:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. Ta de första 9 siffrorna (ÅÅMMDDNNN)
+2. Multiplicera varannan siffra med 2 (från vänster)
+3. Om resultatet blir tvåsiffrigt, addera siffrorna
+4. Summera alla siffror
+5. Kontrollsiffran = (10 - (summa % 10)) % 10
 
-## How can I deploy this project?
+### Exempel
+```
+850709-980 → kontrollsiffra: 5
+Komplett: 850709-9805
+```
 
-Simply open [Lovable](https://lovable.dev/projects/a1b4fd19-8a1b-44ef-8afa-8e6f2ec5a09d) and click on Share -> Publish.
+## 🧪 Testning
 
-## Can I connect a custom domain to my Lovable project?
+```bash
+# Kör alla tester
+npm test
 
-Yes, you can!
+# Kör tester med coverage
+npm run test:coverage
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+# Kör tester i watch-läge
+npm run test:watch
+```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### Testfall
+
+- `850709-980` → kontrollsiffra `5`
+- `640823-323` → kontrollsiffra `4`
+- Samordningsnummer med dag +60
+- Ogiltiga datum och format
+
+## 🚀 Deployment
+
+### Cloudflare Pages
+
+```bash
+# Bygg projektet
+npm run build
+
+# Ladda upp dist/ mappen till Cloudflare Pages
+# Eller använd Wrangler CLI:
+npx wrangler pages publish dist
+```
+
+### Vercel
+
+```bash
+# Installera Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
+```
+
+### Azure Static Web Apps
+
+```yaml
+# .github/workflows/azure-static-web-apps.yml
+name: Azure Static Web Apps CI/CD
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build_and_deploy_job:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build And Deploy
+      uses: Azure/static-web-apps-deploy@v1
+      with:
+        azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        action: "upload"
+        app_location: "/"
+        api_location: ""
+        output_location: "dist"
+```
+
+## 🎛️ Konfiguration
+
+### Miljövariabler
+
+```env
+# Analytics (valfritt)
+VITE_ANALYTICS_PROVIDER=plausible
+VITE_ANALYTICS_DOMAIN=your-domain.com
+
+# Ads (valfritt) 
+VITE_ADS_ENABLED=false
+VITE_ADS_PROVIDER=google
+```
+
+### Feature Flags
+
+```typescript
+// I src/pages/Index.tsx
+const [isTestGeneratorEnabled] = useState(false); // Testgenerator
+```
+
+## 📊 Analytics och annonser
+
+### Analytics
+
+Appen stöder Plausible Analytics med användarsamtycke:
+
+```typescript
+import { initAnalytics, PlausibleAnalytics } from '@/lib/consent';
+
+// Initiera analytics
+initAnalytics(new PlausibleAnalytics('your-domain.com'));
+```
+
+### Annonser
+
+Annonssystem med respektfull refresh-politik:
+
+- Minimum 60 sekunder mellan refresher
+- Endast när annonsytan är >50% synlig
+- Endast efter användarinteraktion
+- Avstängd som standard
+
+## 🤝 Bidrag
+
+1. Forka projektet
+2. Skapa en feature branch (`git checkout -b feature/AmazingFeature`)
+3. Committa dina ändringar (`git commit -m 'Add some AmazingFeature'`)
+4. Pusha till branchen (`git push origin feature/AmazingFeature`)
+5. Öppna en Pull Request
+
+## 📄 Licens
+
+Detta projekt är licensierat under MIT-licensen. Se `LICENSE` filen för detaljer.
+
+## 🆘 Support
+
+- **Dokumentation**: Se denna README och inline-kommentarer
+- **Issues**: Öppna en GitHub issue för buggar eller feature requests
+- **Säkerhet**: För säkerhetsproblem, kontakta maintainers direkt
+
+## 🏗️ Arkitektur
+
+```
+src/
+├── components/          # React komponenter
+│   ├── ui/             # shadcn/ui komponenter
+│   ├── PnrInput.tsx    # Huvudinmatning
+│   ├── ResultCard.tsx  # Resultatvisning
+│   ├── HowItWorks.tsx  # Algoritmförklaring
+│   └── AdSlot.tsx      # Annonsplatser
+├── lib/                # Kärnlogik
+│   ├── pnr.ts         # Personnummer-algoritmer
+│   ├── i18n.ts        # Internationalisering
+│   └── consent.ts     # Integritet och samtycke
+├── i18n/              # Översättningar
+│   ├── sv.json        # Svenska
+│   └── en.json        # Engelska
+└── pages/             # Sidor
+    └── Index.tsx      # Huvudsida
+```
+
+## 🎯 Roadmap
+
+- [ ] Offline-funktionalitet med Service Worker
+- [ ] Batch-validering (flera personnummer)
+- [ ] Export till CSV/JSON
+- [ ] API för utvecklare
+- [ ] Organisationsnummer-stöd
+- [ ] Historikfunktion (utan datalagring)
+
+---
+
+Byggd med ❤️ för svenska utvecklare och alla som arbetar med personnummer.
