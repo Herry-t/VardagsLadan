@@ -4,12 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: "Which branch to promote?"
+        description: "Branch att promota"
         required: true
         default: "main"
         type: string
       include_tags:
-        description: "Push tags too?"
+        description: "Skicka taggar också?"
         required: true
         default: "no"
         type: choice
@@ -18,37 +18,43 @@ on:
 jobs:
   mirror:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout test repo
+      - name: Checkout test repo (utan bot-credentials)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false   # 🔴 viktigt – annars lagras GITHUB_TOKEN
 
-      - name: Configure git
+      - name: Sätt git-identitet
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      # Viktigt: använd x-access-token + secrets
-      - name: Add prod remote (use PAT)
+      # 🔒 Tvinga alla https://github.com/* att använda din PAT
+      - name: Använd PAT för GitHub
         env:
           PROD_PUSH_TOKEN: ${{ secrets.PROD_PUSH_TOKEN }}
-          PROD_OWNER: ${{ secrets.PROD_OWNER }}
-          PROD_REPO: ${{ secrets.PROD_REPO }}
+        run: |
+          git config --global url."https://x-access-token:${PROD_PUSH_TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      - name: Lägg till prod-remote + testa auth
+        env:
+          PROD_OWNER: ${{ secrets.PROD_OWNER }}   # ex: Herry-t
+          PROD_REPO:  ${{ secrets.PROD_REPO }}    # ex: VardagsLadan
         run: |
           set -eu
-          REMOTE_URL="https://x-access-token:${PROD_PUSH_TOKEN}@github.com/${PROD_OWNER}/${PROD_REPO}.git"
-          git remote add prod "$REMOTE_URL"
-          # Testa auth innan push (failar direkt om fel)
-          git ls-remote prod >/dev/null
+          git remote add prod "https://github.com/${PROD_OWNER}/${PROD_REPO}.git"
+          git remote -v
+          git ls-remote prod >/dev/null   # failar direkt om PAT saknar access
 
-      - name: Push selected branch to prod
+      - name: Pusha vald branch till prod
         env:
           BRANCH: ${{ inputs.branch }}
         run: |
           git push prod "${BRANCH}:${BRANCH}"
 
-      - name: Push tags (optional)
+      - name: Pusha taggar (valfritt)
         if: ${{ inputs.include_tags == 'yes' }}
         run: |
-          git push --tags prod
+          git push prod --tags
