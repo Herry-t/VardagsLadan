@@ -3,38 +3,34 @@ name: Promote to prod (manual mirror)
 on:
   workflow_dispatch:
     inputs:
-      include_tags:
-        description: "Push tags to prod as well?"
-        required: true
-        default: "no"
-        type: choice
-        options: [ "no", "yes" ]
       branch:
         description: "Which branch to promote?"
         required: true
         default: "main"
         type: string
+      include_tags:
+        description: "Push tags too?"
+        required: true
+        default: "no"
+        type: choice
+        options: [ "no", "yes" ]
 
 jobs:
   mirror:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
-      - name: Checkout test repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # vi behöver hela historiken/taggar vid behov
+          fetch-depth: 0
 
       - name: Configure git
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Add prod remote
+      - name: Add prod remote (use PAT)
         run: |
-          # Byt ut ditt konto/repo här eller exposa som secrets
-          PROD_URL="https://${{ github.actor }}:${{ secrets.PROD_PUSH_TOKEN }}@github.com/Herry-t/VardagsLadan"
+          PROD_URL="https://x-access-token:${{ secrets.PROD_PUSH_TOKEN }}@github.com/${{ secrets.PROD_OWNER }}/${{ secrets.PROD_REPO }}.git"
           git remote add prod "$PROD_URL"
           git remote -v
 
@@ -42,7 +38,7 @@ jobs:
         run: |
           git push prod ${{ inputs.branch }}:${{ inputs.branch }}
 
-      - name: (Optional) Push tags to prod
+      - name: Push tags (optional)
         if: ${{ inputs.include_tags == 'yes' }}
         run: |
           git push --tags prod
