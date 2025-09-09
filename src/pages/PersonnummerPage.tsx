@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Shield } from 'lucide-react';
+import { Shield, IdCard } from 'lucide-react';
 import { PnrInput } from '@/components/PnrInput';
 import { ResultCard } from '@/components/ResultCard';
 import { HowItWorks } from '@/components/HowItWorks';
@@ -81,6 +81,8 @@ const Index = () => {
           {t('app.privacyBadge')}
         </Badge>
       </section>
+      
+      <main>
         {/* Input Section */}
         <section className="max-w-md mx-auto">
           <PnrInput
