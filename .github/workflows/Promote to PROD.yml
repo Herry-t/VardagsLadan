@@ -34,7 +34,7 @@ jobs:
       - name: Add prod remote
         run: |
           # Byt ut ditt konto/repo här eller exposa som secrets
-          PROD_URL="https://${{ github.actor }}:${{ secrets.PROD_PUSH_TOKEN }}@github.com/Herry-t/VardagsLadan.git"
+          PROD_URL="https://${{ github.actor }}:${{ secrets.PROD_PUSH_TOKEN }}@github.com/Herry-t/VardagsLadan"
           git remote add prod "$PROD_URL"
           git remote -v
 
