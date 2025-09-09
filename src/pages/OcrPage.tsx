@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Hash, Check, X, Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { AdSlot } from '@/components/AdSlot';
 
 interface OcrValidation {
   isValid: boolean;
@@ -21,7 +22,6 @@ export default function OcrPage() {
 
   // Luhn algorithm for OCR validation
   const validateOcr = (ocrNumber: string): OcrValidation => {
-    // Clean input - remove spaces and non-digits
     const cleaned = ocrNumber.replace(/\D/g, '');
     
     if (cleaned.length < 2) {
@@ -93,7 +93,6 @@ export default function OcrPage() {
   };
 
   const formatOcr = (ocr: string) => {
-    // Add spaces every 4 digits for readability
     return ocr.replace(/(\d{4})(?=\d)/g, '$1 ');
   };
 
@@ -115,8 +114,19 @@ export default function OcrPage() {
         </Badge>
       </section>
 
+      {/* Ad Slot - Top */}
+      <section className="max-w-2xl mx-auto">
+        <AdSlot 
+          slotId="ocr-top"
+          sizeMapping={{
+            mobile: [320, 100],
+            tablet: [728, 90],
+            desktop: [728, 90],
+          }}
+        />
+      </section>
+
       <div className="max-w-2xl mx-auto space-y-6">
-        {/* Input Section */}
         <Card>
           <CardHeader>
             <CardTitle>OCR-nummer</CardTitle>
@@ -143,7 +153,6 @@ export default function OcrPage() {
           </CardContent>
         </Card>
 
-        {/* Results */}
         {validation && (
           <Card>
             <CardHeader>
@@ -157,7 +166,6 @@ export default function OcrPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Status */}
               <div className="flex items-center justify-between p-4 rounded-lg border-2 border-dashed">
                 <div>
                   <div className="font-semibold">
@@ -177,59 +185,10 @@ export default function OcrPage() {
                   {validation.isValid ? "Giltigt" : "Ogiltigt"}
                 </Badge>
               </div>
-
-              {/* Details */}
-              {validation.cleaned && (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium text-muted-foreground">
-                        OCR-nummer
-                      </Label>
-                      <div className="flex items-center gap-2">
-                        <code className="flex-1 px-3 py-2 bg-muted rounded-lg font-mono">
-                          {formatOcr(validation.cleaned)}
-                        </code>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => copyToClipboard(validation.cleaned)}
-                          className="shrink-0"
-                        >
-                          {copied ? (
-                            <Check className="h-4 w-4" />
-                          ) : (
-                            <Copy className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium text-muted-foreground">
-                        Kontrollsiffra (beräknad)
-                      </Label>
-                      <code className="block px-3 py-2 bg-muted rounded-lg font-mono">
-                        {validation.checkDigit}
-                      </code>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-muted-foreground">
-                      Längd
-                    </Label>
-                    <code className="block px-3 py-2 bg-muted rounded-lg">
-                      {validation.cleaned.length} siffror
-                    </code>
-                  </div>
-                </div>
-              )}
             </CardContent>
           </Card>
         )}
 
-        {/* Info Section */}
         <Card className="border-dashed">
           <CardContent className="pt-6">
             <div className="space-y-4">
@@ -256,6 +215,19 @@ export default function OcrPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Ad Slot - Bottom */}
+      <section className="max-w-2xl mx-auto">
+        <AdSlot 
+          slotId="ocr-bottom"
+          sizeMapping={{
+            mobile: [320, 250],
+            tablet: [728, 90],
+            desktop: [728, 90],
+          }}
+          refreshIntervalSec={120}
+        />
+      </section>
     </div>
   );
 }

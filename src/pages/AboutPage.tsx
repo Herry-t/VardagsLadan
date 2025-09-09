@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Info, Shield, Zap, Smartphone, Code2, Heart } from 'lucide-react';
+import { AdSlot } from '@/components/AdSlot';
 
 export default function AboutPage() {
   return (
@@ -16,6 +17,18 @@ export default function AboutPage() {
         <p className="text-lg text-muted-foreground">
           Din digitala verktygslåda för vardagen i Sverige
         </p>
+      </section>
+
+      {/* Ad Slot - Top */}
+      <section className="max-w-2xl mx-auto">
+        <AdSlot 
+          slotId="about-top"
+          sizeMapping={{
+            mobile: [320, 100],
+            tablet: [728, 90],
+            desktop: [728, 90],
+          }}
+        />
       </section>
 
       <div className="max-w-4xl mx-auto space-y-8">

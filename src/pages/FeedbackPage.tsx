@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { MessageSquare, Send, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { AdSlot } from '@/components/AdSlot';
 
 export default function FeedbackPage() {
   const [name, setName] = useState('');

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Network, Globe, Clock, Monitor, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { AdSlot } from '@/components/AdSlot';
 
 interface IpInfo {
   ip: string;
@@ -79,6 +80,18 @@ export default function IpPage() {
         <Badge variant="secondary" className="text-xs">
           Ingen geolokalisering • Inget sparas
         </Badge>
+      </section>
+
+      {/* Ad Slot - Top */}
+      <section className="max-w-2xl mx-auto">
+        <AdSlot 
+          slotId="ip-top"
+          sizeMapping={{
+            mobile: [320, 100],
+            tablet: [728, 90],
+            desktop: [728, 90],
+          }}
+        />
       </section>
 
       {/* IP Information Card */}
@@ -196,6 +209,19 @@ export default function IpPage() {
             </div>
           </CardContent>
         </Card>
+      </section>
+
+      {/* Ad Slot - Bottom */}
+      <section className="max-w-2xl mx-auto">
+        <AdSlot 
+          slotId="ip-bottom"
+          sizeMapping={{
+            mobile: [320, 250],
+            tablet: [728, 90],
+            desktop: [728, 90],
+          }}
+          refreshIntervalSec={120}
+        />
       </section>
     </div>
   );

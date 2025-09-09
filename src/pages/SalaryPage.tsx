@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Calculator, TrendingUp, Info } from 'lucide-react';
+import { AdSlot } from '@/components/AdSlot';
 
 interface SalaryCalculation {
   grossSalary: number;
@@ -77,6 +78,18 @@ export default function SalaryPage() {
         <Badge variant="secondary" className="text-xs">
           Förenklad modell • Kontrollera med myndigheter för exakt beräkning
         </Badge>
+      </section>
+
+      {/* Ad Slot - Top */}
+      <section className="max-w-2xl mx-auto">
+        <AdSlot 
+          slotId="salary-top"
+          sizeMapping={{
+            mobile: [320, 100],
+            tablet: [728, 90],
+            desktop: [728, 90],
+          }}
+        />
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
@@ -240,6 +253,19 @@ export default function SalaryPage() {
             </div>
           </CardContent>
         </Card>
+      </section>
+
+      {/* Ad Slot - Bottom */}
+      <section className="max-w-2xl mx-auto">
+        <AdSlot 
+          slotId="salary-bottom"
+          sizeMapping={{
+            mobile: [320, 250],
+            tablet: [728, 90],
+            desktop: [728, 90],
+          }}
+          refreshIntervalSec={120}
+        />
       </section>
     </div>
   );

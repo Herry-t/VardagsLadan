@@ -4,31 +4,31 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Swedish Personnummer Validator Design System */
+/* Vardagslådan - Emerald Design System */
 @layer base {
   :root {
-    /* Nordic color palette */
-    --background: 0 0% 100%;
-    --foreground: 221 39% 11%;
+    /* Emerald color palette */
+    --background: 138 76% 97%; /* emerald-50 */
+    --foreground: 162 88% 17%; /* emerald-900 */
     
-    /* Swedish flag inspired blues */
-    --primary: 217 91% 60%;
+    /* Emerald primary colors */
+    --primary: 160 84% 39%; /* emerald-500 */
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 217 91% 55%;
+    --primary-hover: 161 94% 30%; /* emerald-600 */
     
-    /* Clean grays */
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 221 39% 11%;
+    /* Clean emerald tones */
+    --secondary: 149 80% 90%; /* emerald-100 */
+    --secondary-foreground: 163 88% 20%; /* emerald-800 */
     
-    --muted: 220 13% 95%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 142 49% 94%; /* emerald-50 lighter */
+    --muted-foreground: 160 84% 25%; /* emerald-700 */
     
     /* Accent colors */
-    --accent: 45 93% 47%;
+    --accent: 158 64% 52%; /* emerald-400 */
     --accent-foreground: 0 0% 100%;
     
     /* Status colors */
-    --success: 142 71% 45%;
+    --success: 160 84% 39%; /* emerald-500 */
     --success-foreground: 0 0% 100%;
     --warning: 45 93% 47%;
     --warning-foreground: 0 0% 100%;
@@ -37,23 +37,23 @@
     
     /* UI elements */
     --card: 0 0% 100%;
-    --card-foreground: 221 39% 11%;
-    --border: 220 13% 91%;
+    --card-foreground: 162 88% 17%; /* emerald-900 */
+    --border: 153 40% 89%; /* emerald-200 */
     --input: 0 0% 100%;
-    --input-border: 220 13% 91%;
-    --ring: 217 91% 60%;
+    --input-border: 153 40% 89%; /* emerald-200 */
+    --ring: 160 84% 39%; /* emerald-500 */
     
     --radius: 0.75rem;
     
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(217 91% 70%));
-    --gradient-success: linear-gradient(135deg, hsl(var(--success)), hsl(142 71% 55%));
-    --gradient-subtle: linear-gradient(180deg, hsl(var(--background)), hsl(220 13% 98%));
+    /* Emerald gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(160 84% 39%), hsl(158 64% 52%));
+    --gradient-success: linear-gradient(135deg, hsl(160 84% 39%), hsl(158 64% 52%));
+    --gradient-subtle: linear-gradient(180deg, hsl(138 76% 97%), hsl(142 49% 94%));
     
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(220 13% 69% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(220 13% 69% / 0.1), 0 2px 4px -1px hsl(220 13% 69% / 0.06);
-    --shadow-lg: 0 10px 15px -3px hsl(220 13% 69% / 0.1), 0 4px 6px -2px hsl(220 13% 69% / 0.05);
+    /* Emerald shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(160 84% 39% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(160 84% 39% / 0.1), 0 2px 4px -1px hsl(160 84% 39% / 0.06);
+    --shadow-lg: 0 10px 15px -3px hsl(160 84% 39% / 0.1), 0 4px 6px -2px hsl(160 84% 39% / 0.05);
     
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -77,38 +77,38 @@
   }
 
   .dark {
-    /* Dark mode - Nordic inspired */
-    --background: 221 39% 6%;
+    /* Dark mode - Emerald inspired */
+    --background: 162 88% 6%; /* dark emerald */
     --foreground: 0 0% 98%;
     
-    --primary: 217 91% 65%;
-    --primary-foreground: 221 39% 6%;
-    --primary-hover: 217 91% 70%;
+    --primary: 158 64% 52%; /* emerald-400 */
+    --primary-foreground: 162 88% 6%;
+    --primary-hover: 160 84% 39%; /* emerald-500 */
     
-    --secondary: 221 39% 12%;
+    --secondary: 162 88% 12%;
     --secondary-foreground: 0 0% 98%;
     
-    --muted: 221 39% 10%;
-    --muted-foreground: 220 9% 60%;
+    --muted: 162 88% 10%;
+    --muted-foreground: 149 80% 60%;
     
-    --accent: 45 93% 52%;
-    --accent-foreground: 221 39% 6%;
+    --accent: 160 84% 39%; /* emerald-500 */
+    --accent-foreground: 162 88% 6%;
     
-    --success: 142 71% 50%;
+    --success: 160 84% 39%; /* emerald-500 */
     --warning: 45 93% 52%;
     --destructive: 0 73% 63%;
     
-    --card: 221 39% 8%;
+    --card: 162 88% 8%;
     --card-foreground: 0 0% 98%;
-    --border: 221 39% 15%;
-    --input: 221 39% 10%;
-    --input-border: 221 39% 20%;
-    --ring: 217 91% 65%;
+    --border: 162 88% 15%;
+    --input: 162 88% 10%;
+    --input-border: 162 88% 20%;
+    --ring: 158 64% 52%; /* emerald-400 */
     
-    /* Dark gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(217 91% 75%));
-    --gradient-success: linear-gradient(135deg, hsl(var(--success)), hsl(142 71% 60%));
-    --gradient-subtle: linear-gradient(180deg, hsl(var(--background)), hsl(221 39% 8%));
+    /* Dark emerald gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(158 64% 52%), hsl(160 84% 39%));
+    --gradient-success: linear-gradient(135deg, hsl(160 84% 39%), hsl(158 64% 52%));
+    --gradient-subtle: linear-gradient(180deg, hsl(162 88% 6%), hsl(162 88% 8%));
   }
 }
 

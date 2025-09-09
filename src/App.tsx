@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "@/components/Layout";
+import { ConsentBanner } from "@/components/ConsentBanner";
 import Homepage from "./pages/Homepage";
 import PersonnummerPage from "./pages/PersonnummerPage";
 import IpPage from "./pages/IpPage";
@@ -24,6 +25,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Layout>
+          <ConsentBanner />
           <Routes>
             <Route path="/" element={<Homepage />} />
             <Route path="/personnummer" element={<PersonnummerPage />} />

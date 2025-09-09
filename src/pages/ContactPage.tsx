@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Mail, MessageSquare, Github, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { AdSlot } from '@/components/AdSlot';
 
 export default function ContactPage() {
   const handleEmailClick = () => {
@@ -21,6 +22,18 @@ export default function ContactPage() {
         <p className="text-muted-foreground">
           Har du frågor, förslag eller behöver du hjälp? Vi hör gärna från dig.
         </p>
+      </section>
+
+      {/* Ad Slot - Top */}
+      <section className="max-w-2xl mx-auto">
+        <AdSlot 
+          slotId="contact-top"
+          sizeMapping={{
+            mobile: [320, 100],
+            tablet: [728, 90],
+            desktop: [728, 90],
+          }}
+        />
       </section>
 
       <div className="max-w-2xl mx-auto space-y-6">
