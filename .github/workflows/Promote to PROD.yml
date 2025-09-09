@@ -8,53 +8,83 @@ on:
         required: true
         default: "main"
         type: string
+      mode:
+        description: "Hur hantera ändringar i prod?"
+        required: true
+        default: "merge"
+        type: choice
+        options: [ "merge", "overwrite" ]   # merge = integrera, overwrite = force push
       include_tags:
-        description: "Skicka taggar också?"
+        description: "Pusha taggar också?"
         required: true
         default: "no"
         type: choice
         options: [ "no", "yes" ]
 
 jobs:
-  mirror:
+  promote:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout test repo (utan bot-credentials)
+      - name: Checkout test (utan bot-cred)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          persist-credentials: false   # 🔴 viktigt – annars lagras GITHUB_TOKEN
+          persist-credentials: false
 
-      - name: Sätt git-identitet
+      - name: Git identity
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      # 🔒 Tvinga alla https://github.com/* att använda din PAT
-      - name: Använd PAT för GitHub
+      - name: Use PAT for all github.com
         env:
           PROD_PUSH_TOKEN: ${{ secrets.PROD_PUSH_TOKEN }}
         run: |
           git config --global url."https://x-access-token:${PROD_PUSH_TOKEN}@github.com/".insteadOf "https://github.com/"
 
-      - name: Lägg till prod-remote + testa auth
+      - name: Add prod remote + fetch
         env:
-          PROD_OWNER: ${{ secrets.PROD_OWNER }}   # ex: Herry-t
-          PROD_REPO:  ${{ secrets.PROD_REPO }}    # ex: VardagsLadan
+          PROD_OWNER: ${{ secrets.PROD_OWNER }}
+          PROD_REPO:  ${{ secrets.PROD_REPO }}
+          BRANCH:     ${{ inputs.branch }}
         run: |
-          set -eu
+          set -euxo pipefail
           git remote add prod "https://github.com/${PROD_OWNER}/${PROD_REPO}.git"
-          git remote -v
-          git ls-remote prod >/dev/null   # failar direkt om PAT saknar access
+          git fetch prod "${BRANCH}"
 
-      - name: Pusha vald branch till prod
+      - name: Merge prod -> test (if mode=merge)
+        if: ${{ inputs.mode == 'merge' }}
         env:
           BRANCH: ${{ inputs.branch }}
         run: |
+          set -euxo pipefail
+          # säkerställ att vi är på rätt branch
+          git checkout "${BRANCH}"
+          # merge prod/BRANCH in i test/BRANCH
+          git merge --no-edit --no-ff "prod/${BRANCH}" || {
+            echo "::error::Merge-konflikter. Lös dem i test-repot (PR eller lokalt) och kör igen."
+            exit 1
+          }
+
+      - name: Push branch to prod (merge path)
+        if: ${{ inputs.mode == 'merge' }}
+        env:
+          BRANCH: ${{ inputs.branch }}
+        run: |
+          set -euxo pipefail
           git push prod "${BRANCH}:${BRANCH}"
 
-      - name: Pusha taggar (valfritt)
+      - name: Push branch to prod (overwrite path)
+        if: ${{ inputs.mode == 'overwrite' }}
+        env:
+          BRANCH: ${{ inputs.branch }}
+        run: |
+          set -euxo pipefail
+          # force-with-lease = säkrare än --force (skriver bara över om remote inte ändrats sen fetch)
+          git push --force-with-lease prod "${BRANCH}:${BRANCH}"
+
+      - name: Push tags (optional)
         if: ${{ inputs.include_tags == 'yes' }}
         run: |
+          set -euxo pipefail
           git push prod --tags
