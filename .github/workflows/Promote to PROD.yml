@@ -19,7 +19,8 @@ jobs:
   mirror:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout test repo
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -28,15 +29,24 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+      # Viktigt: använd x-access-token + secrets
       - name: Add prod remote (use PAT)
+        env:
+          PROD_PUSH_TOKEN: ${{ secrets.PROD_PUSH_TOKEN }}
+          PROD_OWNER: ${{ secrets.PROD_OWNER }}
+          PROD_REPO: ${{ secrets.PROD_REPO }}
         run: |
-          PROD_URL="https://x-access-token:${{ secrets.PROD_PUSH_TOKEN }}@github.com/${{ secrets.PROD_OWNER }}/${{ secrets.PROD_REPO }}.git"
-          git remote add prod "$PROD_URL"
-          git remote -v
+          set -eu
+          REMOTE_URL="https://x-access-token:${PROD_PUSH_TOKEN}@github.com/${PROD_OWNER}/${PROD_REPO}.git"
+          git remote add prod "$REMOTE_URL"
+          # Testa auth innan push (failar direkt om fel)
+          git ls-remote prod >/dev/null
 
       - name: Push selected branch to prod
+        env:
+          BRANCH: ${{ inputs.branch }}
         run: |
-          git push prod ${{ inputs.branch }}:${{ inputs.branch }}
+          git push prod "${BRANCH}:${BRANCH}"
 
       - name: Push tags (optional)
         if: ${{ inputs.include_tags == 'yes' }}
