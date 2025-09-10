@@ -281,11 +281,19 @@ export default function SalaryPage() {
                       </div>
 
                       {/* Yearly summary */}
-                      <div className="text-center p-4 bg-muted/30 rounded-lg">
-                        <div className="text-xl font-bold text-foreground mb-1">
-                          {formatCurrency(privatpersonResult.nettolonManad * 12)}
+                      <div className="text-center p-4 bg-muted/30 rounded-lg space-y-2">
+                        <div>
+                          <div className="text-xl font-bold text-foreground">
+                            {formatCurrency(privatpersonResult.nettolonManad * 12)}
+                          </div>
+                          <div className="text-sm text-muted-foreground">nettolön per år</div>
                         </div>
-                        <div className="text-sm text-muted-foreground">nettolön per år</div>
+                        <div>
+                          <div className="text-lg font-semibold text-muted-foreground">
+                            {formatCurrency(privatpersonResult.arslon)}
+                          </div>
+                          <div className="text-xs text-muted-foreground">bruttolön per år</div>
+                        </div>
                       </div>
                     </div>
                   ) : (
