@@ -7,16 +7,20 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calculator, TrendingUp, Lock } from 'lucide-react';
+import { Calculator, TrendingUp, Lock, FileDown, Table, Info, Plus, Trash2 } from 'lucide-react';
 import { AdSlot } from '@/components/AdSlot';
 import { TaxEngine, PrivatpersonInput, ArbetsgivareInput } from '@/lib/taxEngine';
 import { config2025 } from '@/lib/config/2025';
 import { TaxTooltip } from '@/components/TaxTooltip';
 import { TaxBreakdownChart } from '@/components/TaxBreakdownChart';
+import { WageEngine, WageInput, wageConfig, OBEntry, AddonEntry } from '@/lib/wageEngine';
+import { exportLineItemsCSV, exportSummaryCSV } from '@/lib/csvExport';
+import { generateWagePDF } from '@/lib/pdfExport';
 
 export default function SalaryPage() {
   const [activeTab, setActiveTab] = useState('privatperson');
   const taxEngine = useMemo(() => new TaxEngine(config2025), []);
+  const wageEngine = useMemo(() => new WageEngine(wageConfig), []);
 
   // Privatperson states
   const [kommun, setKommun] = useState('Stockholm');
@@ -30,6 +34,33 @@ export default function SalaryPage() {
   const [arbAge, setArbAge] = useState('30');
   const [semesterProc, setSemesterProc] = useState('12');
   const [pensionProc, setPensionProc] = useState('4.5');
+
+  // Wage calculator states
+  const [hourlyRate, setHourlyRate] = useState('150');
+  const [regularHours, setRegularHours] = useState('160');
+
+  const wageResult = useMemo(() => {
+    const rate = parseFloat(hourlyRate) || 0;
+    const regular = parseFloat(regularHours) || 0;
+    
+    if (rate <= 0) return null;
+
+    const input: WageInput = {
+      period: { start: '2025-09-01', end: '2025-09-30' },
+      hourlyRate: rate,
+      roundingStep: 'none',
+      regularHours: regular,
+      obEntries: [],
+      overtime: { ot1: { hours: 0, factor: 1.5 }, ot2: { hours: 0, factor: 2.0 } },
+      meritTime: { hours: 0, factor: 1.0 },
+      absenceHours: 0,
+      addons: [],
+      vacationPercent: 12.0,
+      vacationBase: { regular: true, ob: true, overtime: false, merit: false, addons: false }
+    };
+
+    return wageEngine.calculate(input);
+  }, [hourlyRate, regularHours, wageEngine]);
 
   const privatpersonResult = useMemo(() => {
     const salary = parseFloat(bruttolonManad) || 0;
@@ -52,16 +83,16 @@ export default function SalaryPage() {
   const arbetsgivareResult = useMemo(() => {
     const salary = parseFloat(arbGrossLon) || 0;
     const ageNum = parseInt(arbAge) || 25;
-    const semesterPct = parseFloat(semesterProc) || 12;
-    const pensionPct = parseFloat(pensionProc) || 4.5;
+    const semester = parseFloat(semesterProc) || 12;
+    const pension = parseFloat(pensionProc) || 0;
 
     if (salary <= 0) return null;
 
     const input: ArbetsgivareInput = {
       bruttolonManad: salary,
       age: ageNum,
-      semesterProc: semesterPct,
-      pensionProc: pensionPct
+      semesterProc: semester,
+      pensionProc: pension
     };
 
     return taxEngine.calculateArbetsgivare(input);
@@ -76,90 +107,86 @@ export default function SalaryPage() {
     }).format(amount);
   };
 
-  const kommunOptions = Object.keys(config2025.kommunSkattMap).filter(k => k !== 'FALLBACK');
+  const kommunList = Object.keys(config2025.kommunSkattMap).filter(k => k !== 'FALLBACK');
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <section className="text-center space-y-4 max-w-2xl mx-auto">
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <Calculator className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-            Arbetsgivarkostnad
-          </h1>
-        </div>
-        <p className="text-muted-foreground">
-          Beräkna den totala kostnaden för arbetsgivaren inklusive sociala avgifter
+      <section className="max-w-2xl mx-auto text-center py-8">
+        <h1 className="text-3xl font-bold text-foreground mb-4">
+          Lönekalkyl 2025
+        </h1>
+        <p className="text-lg text-muted-foreground mb-6">
+          Beräkna din nettolön eller arbetsgivaravgifter enkelt och snabbt
         </p>
-        <Badge variant="secondary" className="text-xs">
-          Förenklad modell • Kontrollera med myndigheter för exakt beräkning
+        <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200">
+          Gäller inkomstår {config2025.taxYear} • Beräkningen sker lokalt i din webbläsare
         </Badge>
       </section>
 
       {/* Ad Slot - Top */}
-      <section className="max-w-2xl mx-auto">
+      <section className="max-w-2xl mx-auto mb-8">
         <AdSlot 
           slotId="salary-top"
           sizeMapping={{
-            mobile: [320, 100],
+            mobile: [320, 250],
             tablet: [728, 90],
             desktop: [728, 90],
           }}
+          refreshIntervalSec={90}
         />
       </section>
 
-      <div className="max-w-6xl mx-auto">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
+      {/* Main Calculator */}
+      <section className="max-w-4xl mx-auto mb-12">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="privatperson">Privatperson</TabsTrigger>
             <TabsTrigger value="arbetsgivare">Arbetsgivare</TabsTrigger>
           </TabsList>
 
-          {/* Privatperson Tab */}
           <TabsContent value="privatperson" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Input Form */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Inputs */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Privatperson</CardTitle>
-                  <CardDescription>
-                    Beräkna din nettolön efter skatt
-                  </CardDescription>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calculator className="h-5 w-5 text-emerald-600" />
+                    Inmatning
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-2">
+                <CardContent className="space-y-4">
+                  <div>
                     <Label htmlFor="kommun">Kommun</Label>
                     <Select value={kommun} onValueChange={setKommun}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Välj kommun" />
+                        <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {kommunOptions.map(k => (
+                        {kommunList.map(k => (
                           <SelectItem key={k} value={k}>{k}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
 
-                  <div className="space-y-2">
+                  <div>
                     <Label htmlFor="age">Ålder</Label>
                     <Input
                       id="age"
                       type="number"
                       value={age}
                       onChange={(e) => setAge(e.target.value)}
-                      placeholder="30"
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="bruttolon">Bruttolön per månad (SEK)</Label>
+                  <div>
+                    <Label htmlFor="bruttolonManad">Bruttolön per månad (SEK)</Label>
                     <Input
-                      id="bruttolon"
+                      id="bruttolonManad"
                       type="number"
                       value={bruttolonManad}
                       onChange={(e) => setBruttolonManad(e.target.value)}
-                      placeholder="35000"
                     />
                   </div>
 
@@ -167,24 +194,19 @@ export default function SalaryPage() {
                     <Checkbox
                       id="kyrkomedlem"
                       checked={kyrkomedlem}
-                      onCheckedChange={(checked) => setKyrkomedlem(checked === true)}
+                      onCheckedChange={setKyrkomedlem}
                     />
                     <Label htmlFor="kyrkomedlem">Medlem i Svenska kyrkan</Label>
-                    <TaxTooltip content="Kyrkoavgift tillkommer för medlemmar i Svenska kyrkan" />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="extra-avdrag">Extra skatteavdrag per månad (SEK)</Label>
+                  <div>
+                    <Label htmlFor="extraAvdrag">Extra skatteavdrag per månad (SEK)</Label>
                     <Input
-                      id="extra-avdrag"
+                      id="extraAvdrag"
                       type="number"
                       value={extraAvdrag}
                       onChange={(e) => setExtraAvdrag(e.target.value)}
-                      placeholder="0"
                     />
-                    <p className="text-xs text-muted-foreground">
-                      T.ex. preliminärskatteavdrag eller jämkning
-                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -193,91 +215,19 @@ export default function SalaryPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5" />
-                    Nettolön
+                    <TrendingUp className="h-5 w-5 text-emerald-600" />
+                    Resultat
                   </CardTitle>
-                  <CardDescription>
-                    Din lön efter skatt
-                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {privatpersonResult ? (
                     <div className="space-y-6">
-                      {/* Net salary */}
-                      <div className="text-center p-6 bg-emerald-50 rounded-lg border-2 border-emerald-200">
-                        <div className="text-3xl font-bold text-emerald-700 mb-1">
+                      {/* Main result */}
+                      <div className="text-center p-6 bg-emerald-50 rounded-lg border border-emerald-200">
+                        <div className="text-3xl font-bold text-emerald-900 mb-2">
                           {formatCurrency(privatpersonResult.nettolonManad)}
                         </div>
-                        <div className="text-sm text-muted-foreground">nettolön per månad</div>
-                      </div>
-
-                      {/* Tax breakdown chart */}
-                      <div className="space-y-3">
-                        <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">
-                          Skattefördelning
-                        </h4>
-                        <TaxBreakdownChart
-                          data={[
-                            { label: 'Kommunalskatt', value: privatpersonResult.breakdown.kommunal, color: 'bg-emerald-500' },
-                            { label: 'Regionalskatt', value: privatpersonResult.breakdown.regional, color: 'bg-emerald-400' },
-                            { label: 'Statlig skatt', value: privatpersonResult.breakdown.statlig, color: 'bg-emerald-600' },
-                            { label: 'Begravningsavgift', value: privatpersonResult.breakdown.begravning, color: 'bg-emerald-300' },
-                            ...(kyrkomedlem ? [{ label: 'Kyrkoavgift', value: privatpersonResult.breakdown.kyrka, color: 'bg-emerald-200' }] : [])
-                          ]}
-                          total={privatpersonResult.totalSkatt}
-                        />
-                      </div>
-
-                      {/* Detailed breakdown */}
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center py-2 border-b">
-                          <span className="text-sm flex items-center">
-                            Kommunalskatt
-                            <TaxTooltip content="Skatt som går till din kommun för lokala tjänster" />
-                          </span>
-                          <span className="font-mono">{formatCurrency(privatpersonResult.breakdown.kommunal)}</span>
-                        </div>
-                        
-                        <div className="flex justify-between items-center py-2 border-b">
-                          <span className="text-sm flex items-center">
-                            Regionalskatt
-                            <TaxTooltip content="Skatt som går till regionen, främst för sjukvård" />
-                          </span>
-                          <span className="font-mono">{formatCurrency(privatpersonResult.breakdown.regional)}</span>
-                        </div>
-
-                        {privatpersonResult.breakdown.statlig > 0 && (
-                          <div className="flex justify-between items-center py-2 border-b">
-                            <span className="text-sm flex items-center">
-                              Statlig skatt
-                              <TaxTooltip content="Statlig inkomstskatt på lön över 598 500 kr/år (2025)" />
-                            </span>
-                            <span className="font-mono">{formatCurrency(privatpersonResult.breakdown.statlig)}</span>
-                          </div>
-                        )}
-                        
-                        <div className="flex justify-between items-center py-2 border-b">
-                          <span className="text-sm flex items-center">
-                            Begravningsavgift
-                            <TaxTooltip content="Avgift som finansierar begravningsverksamhet" />
-                          </span>
-                          <span className="font-mono">{formatCurrency(privatpersonResult.breakdown.begravning)}</span>
-                        </div>
-
-                        {kyrkomedlem && privatpersonResult.breakdown.kyrka > 0 && (
-                          <div className="flex justify-between items-center py-2 border-b">
-                            <span className="text-sm flex items-center">
-                              Kyrkoavgift
-                              <TaxTooltip content="Avgift för medlemmar i Svenska kyrkan" />
-                            </span>
-                            <span className="font-mono">{formatCurrency(privatpersonResult.breakdown.kyrka)}</span>
-                          </div>
-                        )}
-                        
-                        <div className="flex justify-between items-center py-3 border-t-2 font-semibold">
-                          <span>Total skatt/månad</span>
-                          <span className="font-mono">{formatCurrency(privatpersonResult.totalSkatt / 12)}</span>
-                        </div>
+                        <div className="text-sm text-emerald-700">nettolön per månad</div>
                       </div>
 
                       {/* Yearly summary */}
@@ -307,71 +257,57 @@ export default function SalaryPage() {
             </div>
           </TabsContent>
 
-          {/* Arbetsgivare Tab */}
           <TabsContent value="arbetsgivare" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Input Form */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Inputs */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Arbetsgivare</CardTitle>
-                  <CardDescription>
-                    Beräkna totala anställningskostnader
-                  </CardDescription>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calculator className="h-5 w-5 text-emerald-600" />
+                    Inmatning
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="arb-bruttolon">Bruttolön per månad (SEK)</Label>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="arbGrossLon">Bruttolön per månad (SEK)</Label>
                     <Input
-                      id="arb-bruttolon"
+                      id="arbGrossLon"
                       type="number"
                       value={arbGrossLon}
                       onChange={(e) => setArbGrossLon(e.target.value)}
-                      placeholder="35000"
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="arb-age">Ålder på den anställde</Label>
+                  <div>
+                    <Label htmlFor="arbAge">Ålder på den anställde</Label>
                     <Input
-                      id="arb-age"
+                      id="arbAge"
                       type="number"
                       value={arbAge}
                       onChange={(e) => setArbAge(e.target.value)}
-                      placeholder="30"
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Arbetsgivaravgiften varierar med ålder
-                    </p>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="semester-proc">Semesterersättning (%)</Label>
+                  <div>
+                    <Label htmlFor="semesterProc">Semesterpåslag (%)</Label>
                     <Input
-                      id="semester-proc"
+                      id="semesterProc"
                       type="number"
-                      step="0.1"
+                      step="0.01"
                       value={semesterProc}
                       onChange={(e) => setSemesterProc(e.target.value)}
-                      placeholder="12"
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Standard procentregeln: 12%
-                    </p>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="pension-proc">Tjänstepension (%)</Label>
+                  <div>
+                    <Label htmlFor="pensionProc">Tjänstepension (%)</Label>
                     <Input
-                      id="pension-proc"
+                      id="pensionProc"
                       type="number"
-                      step="0.1"
+                      step="0.01"
                       value={pensionProc}
                       onChange={(e) => setPensionProc(e.target.value)}
-                      placeholder="4.5"
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Typiskt 4.5% enligt ITP-avtal
-                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -380,80 +316,19 @@ export default function SalaryPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5" />
-                    Totalkostnad
+                    <TrendingUp className="h-5 w-5 text-emerald-600" />
+                    Resultat
                   </CardTitle>
-                  <CardDescription>
-                    Kostnad för arbetsgivaren
-                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {arbetsgivareResult ? (
                     <div className="space-y-6">
-                      {/* Total cost */}
-                      <div className="text-center p-6 bg-emerald-50 rounded-lg border-2 border-emerald-200">
-                        <div className="text-3xl font-bold text-emerald-700 mb-1">
+                      {/* Main result */}
+                      <div className="text-center p-6 bg-emerald-50 rounded-lg border border-emerald-200">
+                        <div className="text-3xl font-bold text-emerald-900 mb-2">
                           {formatCurrency(arbetsgivareResult.totalkostnadManad)}
                         </div>
-                        <div className="text-sm text-muted-foreground">totalkostnad per månad</div>
-                      </div>
-
-                      {/* Cost breakdown chart */}
-                      <div className="space-y-3">
-                        <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">
-                          Kostnadsfördelning
-                        </h4>
-                        <TaxBreakdownChart
-                          data={[
-                            { label: 'Bruttolön', value: arbetsgivareResult.breakdown.bruttolon, color: 'bg-emerald-500' },
-                            { label: 'Arbetsgivaravgifter', value: arbetsgivareResult.breakdown.avgifter, color: 'bg-emerald-400' },
-                            { label: 'Semesterersättning', value: arbetsgivareResult.breakdown.semester, color: 'bg-emerald-300' },
-                            { label: 'Tjänstepension', value: arbetsgivareResult.breakdown.pension, color: 'bg-emerald-200' }
-                          ]}
-                          total={arbetsgivareResult.totalkostnadManad}
-                        />
-                      </div>
-
-                      {/* Detailed breakdown */}
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center py-2 border-b">
-                          <span className="text-sm flex items-center">
-                            Bruttolön
-                            <TaxTooltip content="Den anställdes lön före skatt" />
-                          </span>
-                          <span className="font-mono">{formatCurrency(arbetsgivareResult.breakdown.bruttolon)}</span>
-                        </div>
-                        
-                        <div className="flex justify-between items-center py-2 border-b">
-                          <span className="text-sm flex items-center">
-                            Arbetsgivaravgifter
-                            <TaxTooltip content="Sociala avgifter som arbetsgivaren betalar till staten" />
-                          </span>
-                          <span className="font-mono">{formatCurrency(arbetsgivareResult.breakdown.avgifter)}</span>
-                        </div>
-                        
-                        <div className="flex justify-between items-center py-2 border-b">
-                          <span className="text-sm flex items-center">
-                            Semesterersättning
-                            <TaxTooltip content="Ersättning för semester enligt procentregeln" />
-                          </span>
-                          <span className="font-mono">{formatCurrency(arbetsgivareResult.breakdown.semester)}</span>
-                        </div>
-
-                        {arbetsgivareResult.breakdown.pension > 0 && (
-                          <div className="flex justify-between items-center py-2 border-b">
-                            <span className="text-sm flex items-center">
-                              Tjänstepension
-                              <TaxTooltip content="Pensionsavsättning enligt avtal" />
-                            </span>
-                            <span className="font-mono">{formatCurrency(arbetsgivareResult.breakdown.pension)}</span>
-                          </div>
-                        )}
-                        
-                        <div className="flex justify-between items-center py-3 border-t-2 font-semibold">
-                          <span>Totalkostnad/månad</span>
-                          <span className="font-mono">{formatCurrency(arbetsgivareResult.totalkostnadManad)}</span>
-                        </div>
+                        <div className="text-sm text-emerald-700">totalkostnad per månad</div>
                       </div>
 
                       {/* Per hour cost */}
@@ -476,15 +351,83 @@ export default function SalaryPage() {
           </TabsContent>
         </Tabs>
 
+        {/* Hourly Wage Calculator Section */}
+        <div className="mt-16">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-foreground mb-2">Timlöneunderlag (arbetsgivare)</h2>
+            <p className="text-muted-foreground">Detaljerad beräkning för timanställda med export till PDF och CSV</p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>Inmatning</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="hourly-rate">Timlön (SEK)</Label>
+                  <Input
+                    id="hourly-rate"
+                    type="number"
+                    step="0.01"
+                    value={hourlyRate}
+                    onChange={(e) => setHourlyRate(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="regular-hours">Ordinarie timmar</Label>
+                  <Input
+                    id="regular-hours"
+                    type="number"
+                    step="0.01"
+                    value={regularHours}
+                    onChange={(e) => setRegularHours(e.target.value)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Resultat</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {wageResult ? (
+                  <div className="space-y-4">
+                    <div className="text-center p-6 bg-emerald-50 rounded-lg border border-emerald-200">
+                      <div className="text-3xl font-bold text-emerald-900 mb-2">
+                        {formatCurrency(wageResult.summary.grossPayAmount)}
+                      </div>
+                      <div className="text-sm text-emerald-700">bruttolön att utbetala</div>
+                    </div>
+                    
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                      <div className="flex items-center gap-2 text-emerald-800 text-sm">
+                        <Lock className="h-4 w-4" />
+                        <span>Export sker lokalt i din webbläsare. Ingen information sparas eller skickas till vår server.</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Calculator className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>Ange en timlön för att se beräkningen</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
         {/* Status and Data Sources */}
-        <div className="text-center space-y-2 text-sm text-muted-foreground max-w-4xl mx-auto">
+        <div className="text-center space-y-2 text-sm text-muted-foreground max-w-4xl mx-auto mt-12">
           <p>Gäller inkomstår {config2025.taxYear}</p>
           <p>Senast uppdaterad: {new Date(config2025.lastUpdatedISO).toLocaleDateString('sv-SE')}</p>
           <p className="text-xs">{taxEngine.getDataSources()}</p>
         </div>
 
         {/* Privacy Notice */}
-        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 max-w-4xl mx-auto">
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 max-w-4xl mx-auto mt-6">
           <div className="flex items-center justify-center gap-2 text-emerald-800">
             <Lock className="h-4 w-4" />
             <span className="text-sm font-medium">
@@ -492,32 +435,6 @@ export default function SalaryPage() {
             </span>
           </div>
         </div>
-      </div>
-
-      {/* Disclaimer */}
-      <section className="max-w-4xl mx-auto">
-        <Card className="border-dashed border-yellow-200 bg-yellow-50">
-          <CardContent className="pt-6">
-            <div className="space-y-3 text-sm">
-              <p className="font-medium text-foreground">
-                Viktiga förbehåll
-              </p>
-              <ul className="space-y-1 text-muted-foreground list-disc list-inside">
-                <li>
-                  <strong>Förenklad beräkning:</strong> Vägledande resultat. Det faktiska utfallet kan variera beroende på 
-                  individuella omständigheter, avtal, förmåner och lagändringar.
-                </li>
-                <li>
-                  <strong>Kontrollera alltid:</strong> Använd Skatteverkets officiella verktyg eller konsultera skatte-/redovisningsexpert 
-                  för exakta beräkningar för ditt specifika fall.
-                </li>
-                <li>
-                  <strong>Uppdateringar:</strong> Skatteregler och avgifter kan ändras. Kontrollera aktuella regler på Skatteverket.se.
-                </li>
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
       </section>
 
       {/* Ad Slot - Bottom */}
