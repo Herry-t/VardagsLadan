@@ -18,7 +18,7 @@ import { exportLineItemsCSV, exportSummaryCSV } from '@/lib/csvExport';
 import { generateWagePDF } from '@/lib/pdfExport';
 
 export default function SalaryPage() {
-  const [activeTab, setActiveTab] = useState('privatperson');
+  const [activeTab, setActiveTab] = useState('nettlon');
   const taxEngine = useMemo(() => new TaxEngine(config2025), []);
   const wageEngine = useMemo(() => new WageEngine(wageConfig), []);
 
@@ -140,12 +140,13 @@ export default function SalaryPage() {
       {/* Main Calculator */}
       <section className="max-w-4xl mx-auto mb-12">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="privatperson">Privatperson</TabsTrigger>
-            <TabsTrigger value="arbetsgivare">Arbetsgivare</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="nettlon">Nettolön</TabsTrigger>
+            <TabsTrigger value="arbetsgivare">Arbetsgivarkostnad</TabsTrigger>
+            <TabsTrigger value="timlon">Timlöneunderlag</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="privatperson" className="space-y-6">
+          <TabsContent value="nettlon" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Inputs */}
               <Card>
@@ -194,7 +195,7 @@ export default function SalaryPage() {
                     <Checkbox
                       id="kyrkomedlem"
                       checked={kyrkomedlem}
-                      onCheckedChange={setKyrkomedlem}
+                      onCheckedChange={(checked) => setKyrkomedlem(checked === true)}
                     />
                     <Label htmlFor="kyrkomedlem">Medlem i Svenska kyrkan</Label>
                   </div>
@@ -351,73 +352,74 @@ export default function SalaryPage() {
           </TabsContent>
         </Tabs>
 
-        {/* Hourly Wage Calculator Section */}
-        <div className="mt-16">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-foreground mb-2">Timlöneunderlag (arbetsgivare)</h2>
-            <p className="text-muted-foreground">Detaljerad beräkning för timanställda med export till PDF och CSV</p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>Inmatning</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="hourly-rate">Timlön (SEK)</Label>
-                  <Input
-                    id="hourly-rate"
-                    type="number"
-                    step="0.01"
-                    value={hourlyRate}
-                    onChange={(e) => setHourlyRate(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="regular-hours">Ordinarie timmar</Label>
-                  <Input
-                    id="regular-hours"
-                    type="number"
-                    step="0.01"
-                    value={regularHours}
-                    onChange={(e) => setRegularHours(e.target.value)}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Resultat</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {wageResult ? (
-                  <div className="space-y-4">
-                    <div className="text-center p-6 bg-emerald-50 rounded-lg border border-emerald-200">
-                      <div className="text-3xl font-bold text-emerald-900 mb-2">
-                        {formatCurrency(wageResult.summary.grossPayAmount)}
-                      </div>
-                      <div className="text-sm text-emerald-700">bruttolön att utbetala</div>
-                    </div>
-                    
-                    <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
-                      <div className="flex items-center gap-2 text-emerald-800 text-sm">
-                        <Lock className="h-4 w-4" />
-                        <span>Export sker lokalt i din webbläsare. Ingen information sparas eller skickas till vår server.</span>
-                      </div>
-                    </div>
+          <TabsContent value="timlon" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calculator className="h-5 w-5 text-emerald-600" />
+                    Inmatning
+                  </CardTitle>
+                  <CardDescription>Detaljerad beräkning för timanställda med export till PDF och CSV</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="hourly-rate">Timlön (SEK)</Label>
+                    <Input
+                      id="hourly-rate"
+                      type="number"
+                      step="0.01"
+                      value={hourlyRate}
+                      onChange={(e) => setHourlyRate(e.target.value)}
+                    />
                   </div>
-                ) : (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <Calculator className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Ange en timlön för att se beräkningen</p>
+                  <div>
+                    <Label htmlFor="regular-hours">Ordinarie timmar</Label>
+                    <Input
+                      id="regular-hours"
+                      type="number"
+                      step="0.01"
+                      value={regularHours}
+                      onChange={(e) => setRegularHours(e.target.value)}
+                    />
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-emerald-600" />
+                    Resultat
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {wageResult ? (
+                    <div className="space-y-4">
+                      <div className="text-center p-6 bg-emerald-50 rounded-lg border border-emerald-200">
+                        <div className="text-3xl font-bold text-emerald-900 mb-2">
+                          {formatCurrency(wageResult.summary.grossPayAmount)}
+                        </div>
+                        <div className="text-sm text-emerald-700">bruttolön att utbetala</div>
+                      </div>
+                      
+                      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                        <div className="flex items-center gap-2 text-emerald-800 text-sm">
+                          <Lock className="h-4 w-4" />
+                          <span>Export sker lokalt i din webbläsare. Ingen information sparas eller skickas till vår server.</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <Calculator className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>Ange en timlön för att se beräkningen</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
         {/* Status and Data Sources */}
         <div className="text-center space-y-2 text-sm text-muted-foreground max-w-4xl mx-auto mt-12">
