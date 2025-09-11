@@ -350,7 +350,6 @@ export default function SalaryPage() {
               </Card>
             </div>
           </TabsContent>
-        </Tabs>
 
           <TabsContent value="timlon" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -420,6 +419,7 @@ export default function SalaryPage() {
               </Card>
             </div>
           </TabsContent>
+        </Tabs>
 
         {/* Status and Data Sources */}
         <div className="text-center space-y-2 text-sm text-muted-foreground max-w-4xl mx-auto mt-12">
