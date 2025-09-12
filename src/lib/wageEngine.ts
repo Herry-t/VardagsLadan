@@ -10,16 +10,24 @@ export interface OBEntry {
   value: number;
 }
 
-export interface AddonEntry {
+export interface AdditionalRow {
+  type: 'ob-percent' | 'ob-fixed' | 'overtime' | 'fixed-addition' | 'deduction';
   label: string;
-  amount: number;
-  count: number;
+  hours?: number;
+  percent?: number;
+  amountPerHour?: number;
+  factor?: number;
+  amount?: number;
+  includeInVacationBase: boolean;
 }
 
 export interface WageInput {
   period: {
     start: string; // YYYY-MM-DD
     end: string;   // YYYY-MM-DD
+  };
+  employer?: {
+    name: string;
   };
   employee?: {
     name: string;
@@ -28,17 +36,7 @@ export interface WageInput {
   hourlyRate: number;
   roundingStep: 'none' | '0.25' | '0.5';
   regularHours: number;
-  obEntries: OBEntry[];
-  overtime: {
-    ot1: { hours: number; factor: number };
-    ot2: { hours: number; factor: number };
-  };
-  meritTime: {
-    hours: number;
-    factor: number;
-  };
-  absenceHours: number;
-  addons: AddonEntry[];
+  additionalRows: AdditionalRow[];
   vacationPercent: number;
   vacationBase: {
     regular: boolean;
@@ -121,118 +119,80 @@ export class WageEngine {
       });
     }
 
-    // OB entries
-    input.obEntries.forEach((ob, index) => {
-      if (ob.hours > 0) {
-        const hours = roundHours(ob.hours, input.roundingStep);
-        let amount: number;
-        let formula: string;
-        
-        if (ob.upliftType === 'percent') {
-          amount = hours * input.hourlyRate * (ob.value / 100);
-          formula = `${hours.toFixed(2)} h × ${input.hourlyRate} kr × ${ob.value}%`;
-        } else {
-          amount = hours * ob.value;
-          formula = `${hours.toFixed(2)} h × ${ob.value} kr`;
-        }
-        
-        summary.obAmount += amount;
-        
+    // Process additional rows
+    input.additionalRows.forEach((row, index) => {
+      let amount = 0;
+      let hours = 0;
+      let rate = 0;
+      let factorOrUplift: number | undefined;
+      let formula = '';
+      let type: WageLineItem['type'] = 'Addon';
+
+      switch (row.type) {
+        case 'ob-percent':
+          if (row.hours && row.percent) {
+            hours = roundHours(row.hours, input.roundingStep);
+            rate = input.hourlyRate;
+            factorOrUplift = row.percent / 100;
+            amount = hours * input.hourlyRate * (row.percent / 100);
+            formula = `${hours.toFixed(2)} h × ${input.hourlyRate} kr × ${row.percent}%`;
+            type = 'OB';
+            summary.obAmount += amount;
+          }
+          break;
+
+        case 'ob-fixed':
+          if (row.hours && row.amountPerHour) {
+            hours = roundHours(row.hours, input.roundingStep);
+            rate = row.amountPerHour;
+            amount = hours * row.amountPerHour;
+            formula = `${hours.toFixed(2)} h × ${row.amountPerHour} kr`;
+            type = 'OB';
+            summary.obAmount += amount;
+          }
+          break;
+
+        case 'overtime':
+          if (row.hours && row.factor) {
+            hours = roundHours(row.hours, input.roundingStep);
+            rate = input.hourlyRate;
+            factorOrUplift = row.factor;
+            amount = hours * input.hourlyRate * row.factor;
+            formula = `${hours.toFixed(2)} h × ${input.hourlyRate} kr × ${row.factor}`;
+            type = 'Overtime';
+            summary.overtimeAmount += amount;
+          }
+          break;
+
+        case 'fixed-addition':
+          if (row.amount) {
+            amount = row.amount;
+            formula = `${row.amount} kr`;
+            type = 'Addon';
+            summary.addonsAmount += amount;
+          }
+          break;
+
+        case 'deduction':
+          if (row.amount) {
+            amount = -Math.abs(row.amount);
+            formula = `${Math.abs(row.amount)} kr (avdrag)`;
+            type = 'Absence';
+            summary.absenceAmount += amount;
+          }
+          break;
+      }
+
+      if (amount !== 0 || hours !== 0) {
         lineItems.push({
-          type: 'OB',
-          label: ob.label || `OB${index + 1}`,
-          hours,
-          rate: ob.upliftType === 'percent' ? input.hourlyRate : ob.value,
-          factorOrUplift: ob.upliftType === 'percent' ? ob.value / 100 : undefined,
-          includeInVacationBase: input.vacationBase.ob,
+          type,
+          label: row.label || `${row.type}${index + 1}`,
+          hours: hours > 0 ? hours : undefined,
+          rate: rate > 0 ? rate : undefined,
+          factorOrUplift,
+          includeInVacationBase: row.includeInVacationBase,
           amount,
           formula
-        });
-      }
-    });
-
-    // Overtime
-    if (input.overtime.ot1.hours > 0) {
-      const hours = roundHours(input.overtime.ot1.hours, input.roundingStep);
-      const amount = hours * input.hourlyRate * input.overtime.ot1.factor;
-      summary.overtimeAmount += amount;
-      
-      lineItems.push({
-        type: 'Overtime',
-        label: `ÖT1 ${input.overtime.ot1.factor}x`,
-        hours,
-        rate: input.hourlyRate,
-        factorOrUplift: input.overtime.ot1.factor,
-        includeInVacationBase: input.vacationBase.overtime,
-        amount,
-        formula: `${hours.toFixed(2)} h × ${input.hourlyRate} kr × ${input.overtime.ot1.factor}`
-      });
-    }
-
-    if (input.overtime.ot2.hours > 0) {
-      const hours = roundHours(input.overtime.ot2.hours, input.roundingStep);
-      const amount = hours * input.hourlyRate * input.overtime.ot2.factor;
-      summary.overtimeAmount += amount;
-      
-      lineItems.push({
-        type: 'Overtime',
-        label: `ÖT2 ${input.overtime.ot2.factor}x`,
-        hours,
-        rate: input.hourlyRate,
-        factorOrUplift: input.overtime.ot2.factor,
-        includeInVacationBase: input.vacationBase.overtime,
-        amount,
-        formula: `${hours.toFixed(2)} h × ${input.hourlyRate} kr × ${input.overtime.ot2.factor}`
-      });
-    }
-
-    // Merit time
-    if (input.meritTime.hours > 0) {
-      const hours = roundHours(input.meritTime.hours, input.roundingStep);
-      const amount = hours * input.hourlyRate * input.meritTime.factor;
-      summary.meritAmount = amount;
-      
-      lineItems.push({
-        type: 'Merit',
-        label: `Mertid ${input.meritTime.factor}x`,
-        hours,
-        rate: input.hourlyRate,
-        factorOrUplift: input.meritTime.factor,
-        includeInVacationBase: input.vacationBase.merit,
-        amount,
-        formula: `${hours.toFixed(2)} h × ${input.hourlyRate} kr × ${input.meritTime.factor}`
-      });
-    }
-
-    // Absence (negative amount)
-    if (input.absenceHours > 0) {
-      const hours = roundHours(input.absenceHours, input.roundingStep);
-      const amount = -(hours * input.hourlyRate);
-      summary.absenceAmount = amount;
-      
-      lineItems.push({
-        type: 'Absence',
-        label: 'Frånvaro utan lön',
-        hours,
-        rate: input.hourlyRate,
-        includeInVacationBase: false,
-        amount,
-        formula: `${hours.toFixed(2)} h × ${input.hourlyRate} kr (avdrag)`
-      });
-    }
-
-    // Addons
-    input.addons.forEach(addon => {
-      if (addon.amount > 0 && addon.count > 0) {
-        const amount = addon.amount * addon.count;
-        summary.addonsAmount += amount;
-        
-        lineItems.push({
-          type: 'Addon',
-          label: addon.label,
-          includeInVacationBase: input.vacationBase.addons,
-          amount,
-          formula: addon.count > 1 ? `${addon.amount} kr × ${addon.count}` : `${addon.amount} kr`
         });
       }
     });
