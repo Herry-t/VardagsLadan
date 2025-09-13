@@ -1,4 +1,4 @@
-# Personnummer Validator
+# VardagsLådan - Personnummer Validator
 
 En modern, snabb och mobilanpassad PWA för att beräkna och verifiera svenska personnummer med Luhn-algoritmen.
 
