@@ -73,9 +73,9 @@ export default function SalaryPage() {
       <section>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="nettolön">Räkna ut nettolön (privatperson)</TabsTrigger>
-            <TabsTrigger value="arbetsgivarkostnad">Räkna ut arbetsgivarens totalkostnad (arbetsgivare, fast lön)</TabsTrigger>
-            <TabsTrigger value="timloneunderlag">Timlöneunderlag (arbetsgivare, timanställda)</TabsTrigger>
+            <TabsTrigger value="nettolön">Räkna ut nettolön</TabsTrigger>
+            <TabsTrigger value="arbetsgivarkostnad">Räkna ut arbetsgivarens totalkostnad</TabsTrigger>
+            <TabsTrigger value="timloneunderlag">Timlöneunderlag</TabsTrigger>
           </TabsList>
 
           <TabsContent value="nettolön" className="space-y-8">
