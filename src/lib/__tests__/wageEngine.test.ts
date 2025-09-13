@@ -10,11 +10,7 @@ describe('WageEngine', () => {
     hourlyRate: 150,
     roundingStep: 'none',
     regularHours: 160,
-    obEntries: [],
-    overtime: { ot1: { hours: 0, factor: 1.5 }, ot2: { hours: 0, factor: 2.0 } },
-    meritTime: { hours: 0, factor: 1.0 },
-    absenceHours: 0,
-    addons: [],
+    additionalRows: [],
     vacationPercent: 12.0,
     vacationBase: { regular: true, ob: true, overtime: false, merit: false, addons: false }
   };
@@ -31,7 +27,9 @@ describe('WageEngine', () => {
   it('should apply overtime factor correctly', () => {
     const input = {
       ...baseInput,
-      overtime: { ot1: { hours: 20, factor: 1.5 }, ot2: { hours: 0, factor: 2.0 } }
+      additionalRows: [
+        { type: 'overtime' as const, label: 'ÖT1', hours: 20, factor: 1.5, includeInVacationBase: false }
+      ]
     };
     
     const result = engine.calculate(input);
@@ -45,9 +43,9 @@ describe('WageEngine', () => {
   it('should handle OB percent vs fixed rate correctly', () => {
     const input = {
       ...baseInput,
-      obEntries: [
-        { label: 'OB Kväll', hours: 30, upliftType: 'percent' as const, value: 20 },
-        { label: 'OB Helg', hours: 10, upliftType: 'fixed' as const, value: 50 }
+      additionalRows: [
+        { type: 'ob-percent' as const, label: 'OB Kväll', hours: 30, percent: 20, includeInVacationBase: true },
+        { type: 'ob-fixed' as const, label: 'OB Helg', hours: 10, amountPerHour: 50, includeInVacationBase: true }
       ]
     };
     
@@ -62,7 +60,9 @@ describe('WageEngine', () => {
     const input = {
       ...baseInput,
       regularHours: 100,
-      overtime: { ot1: { hours: 20, factor: 1.5 }, ot2: { hours: 0, factor: 2.0 } },
+      additionalRows: [
+        { type: 'overtime' as const, label: 'ÖT1', hours: 20, factor: 1.5, includeInVacationBase: true }
+      ],
       vacationBase: { regular: true, ob: true, overtime: true, merit: false, addons: false }
     };
     
@@ -75,15 +75,17 @@ describe('WageEngine', () => {
     expect(result.summary.grossPayAmount).toBe(15000 + 4500 + 2340); // 21840
   });
 
-  it('should calculate absence as negative amount', () => {
+  it('should calculate deduction as negative amount', () => {
     const input = {
       ...baseInput,
-      absenceHours: 8
+      additionalRows: [
+        { type: 'deduction' as const, label: 'Avdrag', amount: 1200, includeInVacationBase: false }
+      ]
     };
     
     const result = engine.calculate(input);
     
-    expect(result.summary.absenceAmount).toBe(-8 * 150); // -1200
+    expect(result.summary.absenceAmount).toBe(-1200); // -1200
     expect(result.summary.grossPayAmount).toBe((160 * 150) + (160 * 150 * 0.12) - 1200);
   });
 });

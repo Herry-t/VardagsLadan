@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calculator, TrendingUp, Target, Building2, Lock } from 'lucide-react';
-import { TaxEngine, TaxInput } from '@/lib/taxEngine';
+import { TaxEngine, PrivatpersonInput } from '@/lib/taxEngine';
 import { config2025 } from '@/lib/config/2025';
 import PayrollSpecification from '@/components/PayrollSpecification';
 import { AdSlot } from '@/components/AdSlot';
@@ -24,13 +24,15 @@ export default function SalaryPage() {
   useEffect(() => {
     const grossSalary = parseFloat(salary);
     if (grossSalary > 0) {
-      const input: TaxInput = {
-        grossSalary: grossSalary,
-        municipality: municipality,
-        age: parseInt(age)
+      const input: PrivatpersonInput = {
+        bruttolonManad: grossSalary,
+        kommun: municipality,
+        age: parseInt(age),
+        kyrkomedlem: false,
+        extraAvdragManad: 0
       };
       
-      setTaxResult(taxEngine.calculateFromGrossSalary(input));
+      setTaxResult(taxEngine.calculatePrivatperson(input));
     } else {
       setTaxResult(null);
     }
@@ -135,7 +137,7 @@ export default function SalaryPage() {
                     <div className="space-y-4">
                       <div className="text-center p-6 bg-emerald-50 rounded-lg border border-emerald-200">
                         <div className="text-3xl font-bold text-emerald-900 mb-2">
-                          {formatCurrency(taxResult.netSalary)}
+                          {formatCurrency(taxResult.nettolonManad)}
                         </div>
                         <div className="text-sm text-emerald-700">nettolön per månad</div>
                       </div>
