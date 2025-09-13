@@ -10,6 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { WageEngine, WageInput, WageResult, AdditionalRow, roundHours } from '@/lib/wageEngine';
 import { generatePayrollPDF } from '@/lib/payrollExport';
 import { exportPayrollLineItemsCSV, exportPayrollSummaryCSV } from '@/lib/payrollCsvExport';
+import { endOfMonth, format } from 'date-fns';
 
 const wageEngine = new WageEngine({ hoursPerMonth: 165, currency: 'SEK' });
 
@@ -58,6 +59,22 @@ export default function PayrollSpecification() {
   const [showZeroRows, setShowZeroRows] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [wageResult, setWageResult] = useState<WageResult | null>(null);
+
+  // Handle start date change with auto end date calculation
+  const handleStartDateChange = (dateValue: string) => {
+    setPeriodStart(dateValue);
+    
+    if (dateValue) {
+      try {
+        const startDate = new Date(dateValue);
+        const endDate = endOfMonth(startDate);
+        const formattedEndDate = format(endDate, 'yyyy-MM-dd');
+        setPeriodEnd(formattedEndDate);
+      } catch (error) {
+        // If date parsing fails, don't set end date automatically
+      }
+    }
+  };
 
   // Calculate result when inputs change
   useEffect(() => {
@@ -161,7 +178,7 @@ export default function PayrollSpecification() {
                 <Input
                   type="date"
                   value={periodStart}
-                  onChange={(e) => setPeriodStart(e.target.value)}
+                  onChange={(e) => handleStartDateChange(e.target.value)}
                   placeholder="Från"
                 />
               </div>
