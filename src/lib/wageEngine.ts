@@ -48,7 +48,7 @@ export interface WageInput {
 }
 
 export interface WageLineItem {
-  type: 'Regular' | 'OB' | 'Overtime' | 'Merit' | 'Absence' | 'Addon' | 'VacationPay';
+  type: 'Ordinarie' | 'OB' | 'Övertid' | 'Tillägg' | 'Frånvaro' | 'Addon' | 'Semesterersättning';
   label: string;
   hours?: number;
   rate?: number;
@@ -57,6 +57,13 @@ export interface WageLineItem {
   amount: number;
   formula: string;
 }
+
+// Default OB rates configuration
+export const defaultOBRates = {
+  percent: 20, // 20% OB-tillägg
+  fixedRate: 50, // 50 kr/h OB-tillägg
+  lastUpdated: "2024-12-15"
+};
 
 export interface WageResult {
   lineItems: WageLineItem[];
@@ -109,7 +116,7 @@ export class WageEngine {
       summary.regularAmount = amount;
       
       lineItems.push({
-        type: 'Regular',
+        type: 'Ordinarie',
         label: 'Ordinarie tid',
         hours,
         rate: input.hourlyRate,
@@ -159,7 +166,7 @@ export class WageEngine {
             factorOrUplift = row.factor;
             amount = hours * input.hourlyRate * row.factor;
             formula = `${hours.toFixed(2)} h × ${input.hourlyRate} kr × ${row.factor}`;
-            type = 'Overtime';
+            type = 'Övertid';
             summary.overtimeAmount += amount;
           }
           break;
@@ -168,7 +175,7 @@ export class WageEngine {
           if (row.amount) {
             amount = row.amount;
             formula = `${row.amount} kr`;
-            type = 'Addon';
+            type = 'Tillägg';
             summary.addonsAmount += amount;
           }
           break;
@@ -177,7 +184,7 @@ export class WageEngine {
           if (row.amount) {
             amount = -Math.abs(row.amount);
             formula = `${Math.abs(row.amount)} kr (avdrag)`;
-            type = 'Absence';
+            type = 'Frånvaro';
             summary.absenceAmount += amount;
           }
           break;
@@ -207,7 +214,7 @@ export class WageEngine {
     
     if (summary.vacationAmount > 0) {
       lineItems.push({
-        type: 'VacationPay',
+        type: 'Semesterersättning',
         label: `Semesterersättning ${input.vacationPercent}%`,
         includeInVacationBase: false,
         amount: summary.vacationAmount,

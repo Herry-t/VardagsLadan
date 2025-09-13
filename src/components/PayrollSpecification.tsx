@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Trash2, FileDown, Table, TrendingUp, Calculator, Lock, ChevronDown, ChevronUp } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { WageEngine, WageInput, WageResult, AdditionalRow, roundHours } from '@/lib/wageEngine';
+import { WageEngine, WageInput, WageResult, AdditionalRow, roundHours, defaultOBRates } from '@/lib/wageEngine';
 import { generatePayrollPDF } from '@/lib/payrollExport';
 import { exportPayrollLineItemsCSV, exportPayrollSummaryCSV } from '@/lib/payrollCsvExport';
 import { endOfMonth, format } from 'date-fns';
@@ -30,6 +30,7 @@ export default function PayrollSpecification() {
   const [hourlyRate, setHourlyRate] = useState('');
   const [regularHours, setRegularHours] = useState('');
   const [vacationPercent, setVacationPercent] = useState('12.0');
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
 
   // Optional fields
   const [employerName, setEmployerName] = useState('');
@@ -43,7 +44,7 @@ export default function PayrollSpecification() {
       type: 'ob-percent',
       label: 'OB-tillägg kväll',
       hours: 0,
-      percent: 20,
+      percent: defaultOBRates.percent,
       includeInVacationBase: true
     },
     {
@@ -111,6 +112,7 @@ export default function PayrollSpecification() {
     setAdditionalRows([...additionalRows, {
       type: 'ob-percent',
       label: '',
+      percent: defaultOBRates.percent,
       includeInVacationBase: true
     }]);
   };
@@ -118,6 +120,16 @@ export default function PayrollSpecification() {
   const updateAdditionalRow = (index: number, updates: Partial<AdditionalRow>) => {
     const updated = [...additionalRows];
     updated[index] = { ...updated[index], ...updates };
+    
+    // Auto-populate default values when type changes
+    if (updates.type) {
+      if (updates.type === 'ob-percent' && !updated[index].percent) {
+        updated[index].percent = defaultOBRates.percent;
+      } else if (updates.type === 'ob-fixed' && !updated[index].amountPerHour) {
+        updated[index].amountPerHour = defaultOBRates.fixedRate;
+      }
+    }
+    
     setAdditionalRows(updated);
   };
 
@@ -231,6 +243,16 @@ export default function PayrollSpecification() {
             />
           </div>
 
+          <div>
+            <Label htmlFor="payment-date">Utbetalningsdag</Label>
+            <Input
+              id="payment-date"
+              type="date"
+              value={paymentDate}
+              onChange={(e) => setPaymentDate(e.target.value)}
+            />
+          </div>
+
           {/* Optional fields */}
           <div className="space-y-2">
             <Label className="text-sm font-semibold">Valfria fält</Label>
@@ -270,10 +292,10 @@ export default function PayrollSpecification() {
             <div>
               <Label htmlFor="rounding-step">Avrundning timmar</Label>
               <Select value={roundingStep} onValueChange={(value: 'none' | '0.25' | '0.5') => setRoundingStep(value)}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-background">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background border z-50">
                   <SelectItem value="none">Ingen</SelectItem>
                   <SelectItem value="0.25">0,25h</SelectItem>
                   <SelectItem value="0.5">0,5h</SelectItem>
@@ -284,8 +306,13 @@ export default function PayrollSpecification() {
 
           {/* Additional rows */}
           <div className="space-y-2">
+            <Label className="text-sm font-semibold">
+              Tilläggsrader 
+              <span className="text-xs text-muted-foreground ml-2">
+                (OB-värden uppdaterade {defaultOBRates.lastUpdated})
+              </span>
+            </Label>
             <div className="flex justify-between items-center">
-              <Label className="text-sm font-semibold">Tilläggsrader</Label>
               <Button variant="outline" size="sm" onClick={addAdditionalRow}>
                 <Plus className="h-4 w-4 mr-1" />
                 Lägg till rad
@@ -299,10 +326,10 @@ export default function PayrollSpecification() {
                     value={row.type}
                     onValueChange={(value) => updateAdditionalRow(index, { type: value as AdditionalRow['type'] })}
                   >
-                    <SelectTrigger className="w-40">
+                    <SelectTrigger className="w-40 bg-background">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-background border z-50">
                       <SelectItem value="ob-percent">OB - procent</SelectItem>
                       <SelectItem value="ob-fixed">OB - kr/h</SelectItem>
                       <SelectItem value="overtime">Övertid - faktor</SelectItem>

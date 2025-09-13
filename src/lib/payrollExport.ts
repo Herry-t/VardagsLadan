@@ -80,7 +80,7 @@ export function generatePayrollPDF(input: WageInput, result: WageResult): void {
   );
 
   // Regular row first
-  const regularRow = filteredItems.find(item => item.type === 'Regular');
+  const regularRow = filteredItems.find(item => item.type === 'Ordinarie');
   if (regularRow) {
     xPos = margin;
     
@@ -103,7 +103,7 @@ export function generatePayrollPDF(input: WageInput, result: WageResult): void {
 
   // Additional rows (OB/OT/additions/deductions)
   const additionalRows = filteredItems.filter(item => 
-    item.type !== 'Regular' && item.type !== 'VacationPay'
+    item.type !== 'Ordinarie' && item.type !== 'Semesterersättning'
   );
   
   additionalRows.forEach(item => {
@@ -146,7 +146,7 @@ export function generatePayrollPDF(input: WageInput, result: WageResult): void {
   });
 
   // Vacation pay row
-  const vacationRow = filteredItems.find(item => item.type === 'VacationPay');
+  const vacationRow = filteredItems.find(item => item.type === 'Semesterersättning');
   if (vacationRow) {
     xPos = margin;
     
