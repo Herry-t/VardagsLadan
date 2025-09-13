@@ -36,8 +36,23 @@ export default function PayrollSpecification() {
   const [employeeId, setEmployeeId] = useState('');
   const [roundingStep, setRoundingStep] = useState<'none' | '0.25' | '0.5'>('none');
 
-  // Additional rows
-  const [additionalRows, setAdditionalRows] = useState<AdditionalRow[]>([]);
+  // Additional rows - start with some default rows
+  const [additionalRows, setAdditionalRows] = useState<AdditionalRow[]>([
+    {
+      type: 'ob-percent',
+      label: 'OB-tillägg kväll',
+      hours: 0,
+      percent: 20,
+      includeInVacationBase: true
+    },
+    {
+      type: 'overtime',
+      label: 'Övertid 1,5x',
+      hours: 0,
+      factor: 1.5,
+      includeInVacationBase: false
+    }
+  ]);
 
   // UI state
   const [showZeroRows, setShowZeroRows] = useState(false);
